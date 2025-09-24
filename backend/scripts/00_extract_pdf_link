@@ -1,0 +1,48 @@
+import os
+import pandas as pd
+import requests
+from bs4 import BeautifulSoup
+from tqdm import tqdm
+
+# CSV con los enlaces de páginas PMC
+CSV_file = r"C:\Users\Quiroz\Documents\links.csv"
+df = pd.read_csv(CSV_file)
+
+# Carpeta para guardar el nuevo CSV con enlaces de PDFs
+OUTPUT_DIR = os.path.join(os.path.dirname(__file__), '..', 'data')
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+OUTPUT_CSV = os.path.join(OUTPUT_DIR, 'pdf_links.csv')
+
+pdf_links = []
+
+for i, url in enumerate(tqdm(df['Link'], desc="Extrayendo enlaces PDF")):
+    try:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                          "AppleWebKit/537.36 (KHTML, like Gecko) "
+                          "Chrome/115.0.0.0 Safari/537.36"
+        }
+        r = requests.get(url, headers=headers)
+        r.raise_for_status()
+
+        soup = BeautifulSoup(r.text, 'html.parser')
+
+        # Buscar el enlace al PDF
+        pdf_a = soup.find('a', href=lambda href: href and '/pdf/' in href)
+        if pdf_a:
+            pdf_url = pdf_a['href']
+            # Asegurar que sea URL completa
+            if pdf_url.startswith('/'):
+                pdf_url = 'https://pmc.ncbi.nlm.nih.gov' + pdf_url
+            pdf_links.append(pdf_url)
+        else:
+            pdf_links.append('')  # No se encontró PDF
+
+    except Exception as e:
+        print(f"Error en {url}: {e}")
+        pdf_links.append('')  # Error, no se encontró PDF
+
+# Guardar CSV con enlaces a PDFs
+df['PDF_Link'] = pdf_links
+df.to_csv(OUTPUT_CSV, index=False)
+print(f"Nuevo CSV guardado en: {OUTPUT_CSV}")
