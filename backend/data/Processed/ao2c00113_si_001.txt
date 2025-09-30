@@ -1,0 +1,324 @@
+S1
+                                     Supporting Information
+Blocking SARS-CoV-2 Delta Variant (B.1.617.2) Spike Protein RBD Binding with 
+ACE2 Receptor of the Host Cell and Inhibiting Virus Infections Using Human Host 
+Defense Peptides Conjugated Graphene Quantum Dots 
+Avijit Pramanik1, Poonam C. Sharma 2, Shamily Patibandla1, Ye Gao1, Vinod Ruppa-Kasani1, 
+Jagruti Goli1, Animesh Kumar1, Abhirup Chatterjee1, Sudarson Sekhar Sinha1, John T. Bates 2, 
+Michael A. Bierdeman2, Ritesh Tandon2, and Paresh Chandra Ray1 *
+1Department of Chemistry and Biochemistry, Jackson State University, Jackson, MS, 39217, USA; E-
+mail: paresh.c.ray@jsums.edu; Fax: +16019793674
+2Department of Microbiology and Immunology, University of Mississippi Medical Center, Jackson, 
+MS, 39216, USA
+Methods
+Gold chloride, citric acid, sodium borohydride, 
+HNP1(ACYCRIPACIAGERRYGTCIYQGRLW
+AFCC) 
+and 
+LL-37 
+(LLGDFFRKSKEKRIVQRIKDFLRNLVPRTES
+) peptides, and other chemicals were purchased 
+from Sigma-Aldrich (St. Louis, MO, USA). We 
+purchased the HEK293T cell line and HEK293T 
+cell line from the American Type Culture 
+Collection, which were grown according to an 
+ATCC procedure. The GFP tagged Baculovirus 
+pseudotyped with a SARS-CoV-2 Delta Variant 
+(B.1.617.2) spike protein (#C1123G, Montano 
+Molecular, Bozeman, MT) was purchased from 
+Montan0 Molecular, Bozeman, Montana 59715.
+Synthesis of Graphene Oxide: Graphene oxide 
+nanoparticles were synthesized using natural 
+Graphite powder with an average size of <150 
+μm using according to modified Hummer’s 
+method which was also described in our previous 
+work 22-23, as shown in Figure S1. In brief, .501 g 
+of graphite, 0.503 g of sodium nitrate, and 23 mL 
+of concentrated sulfuric acid were added into a 
+500 ml beaker and kept under ice bath (below 
+5°C) with constant stirring. The mixture was 
+stirred for 20 minutes and then 3.0 gm of 
+potassium permanganate was added to the 
+mixture. The next batch of permanganate was 
+added after the green color disappeared. Then the 
+mixture was maintained under stirring at the 
+same condition. 3 mL of concentrated sulfuric 
+acid was used to wash down the graphite on the 
+inside of the beaker after each addition. Then 75 
+ml of deionized water was further added to the 
+above solution. Next the H2O2 (50 %) was added 
+to the mixture till there was no gas generated (~ 3 
+mL). There was a distinct change in color was 
+observed from dark brown to golden yellow 
+which is the visual marker for the formation of 
+graphene oxide. color. Then, the yellow mixture 
+was washed with 5% HCl followed by ethanol 
+for remove the metal impurities. Finally, the GO 
+was purified by centrifugation at 10000 rpm 
+speed for 60 min repeatedly until the pH was near 
+neutral (pH ~ 6.5-7.0). 
+Figure S1: Scheme shows the design of 
+graphene quantum dots (GQDs) from graphite 
+using 
+modified 
+Hummer’s 
+method 
+and 
+hydrothermal cutting method
+The GO was finally dried by lyophilization at -
+20oC and characterized by spectroscopic and 
+imaging analysis.  
+Synthesis 
+of 
+Graphene 
+Quantum 
+Dots 
+(GQDs): Graphene Quantum Dots (GQDs) also 
+synthesized 
+using 
+our 
+previously 
+reported 
+procedure developed by our group22-23, as shown 
+in Figure S1. In a typical synthesis, 100 mg of 
+GO was added in 100 ml of Dimethyl formamide 
+S3
+(DMF) to produce GO-DMF suspension. Then 
+the suspension was transferred into a Teflon lined 
+autoclave, and it was heated 200oC for overnight. 
+Then the mixture was cooled down to room 
+temperature and filtered using 0.5-micron filter 
+paper to remove black precipitate. Lastly, the 
+solid product was obtained by rotary evaporation 
+under reduced pressure at 80oC. 
+Synthesis of HNP-1 and LL-37 Human Host 
+Defense Peptide attached Graphene Quantum 
+Dots (GQDs):  For the development of HNP-1, 
+and LL-37 human host defense peptide attached 
+GQDS, we have used carbodiimide coupling 
+chemistry between carboxy group of graphene 
+oxides and amine group of peptides 17,23.
+ 
+S4
+Figure S2: A) TEM shows the morphology of 
+freshly prepared graphene oxide. B) TEM 
+shows the morphology of freshly prepared 
+graphene quantum dots (GQDs), which 
+indicates that GQDs sizes are 4 ± 2 nm C) 
+XRD spectra from LL-37 and HNP1 attached 
+GQDs shows diffractions peaks due to the 
+graphite (002) planes. D) Raman spectrum 
+from LL-37 and HNP1 attached GQDs shows 
+the presence of D and G bands due to the 
+GQD. Higher D bands indicate the high defect 
+due to the presence of peptides. E) Absorption 
+spectra from freshly prepared LL-37 and 
+HNP1 
+attached 
+GQDs. 
+F) 
+Fluorescence 
+spectra from freshly prepared GQDs and LL-
+37 and HNP1 attached GQDs. G) FTIR 
+spectra from freshly prepared GQDs and LL-
+37 
+and 
+HNP1 
+attached 
+GQDs 
+show 
+characteristic amide − O−H, −C-H, amide-I, 
+amide-II, C = O and − C−O-C- peaks.
+As shown in Figure 1, for this purpose, initially, 
+carboxyl groups from GQDs were activated using 
+1-ethyl-3(3-(dimethylamino)-
+propyl)carbodiimide·HCl 
+(EDC) 
+and N-
+hydroxysuccinimide (NHS) coupling agents for 
+30 min17-23. In the next step, HNP-1, and LL-37 
+human host defense peptides, were added at 
+different weight ratios under stirring for 24 h. 
+After that, we have performed centrifugation at 
+10 000 rpm for 30 min, followed by decantation. 
+At the end high-resolution transmission electron 
+microscopy (HRTEM), X-ray diffraction (XRD) 
+spectroscopy, Nano ZS, Energy-dispersive X-ray 
+(EDX), Fourier transform infrared (FTIR) 
+spectroscopy and Raman spectroscopy have been 
+used for characterization14,15,17,22-23, as shown in 
+Figure S2.
+SARS-CoV-2 Delta Variant (B.1.617.2) spike 
+protein RBD and HNP-1, and LL-37 human 
+host defense peptides attached GQDs binding 
+studies using peptide attached GQDs based 
+luminescence
+ For the binding between, SARS-CoV-2 Delta 
+Variant (B.1.617.2) spike protein RBD and HNP-
+1, and LL-37 human host defense peptides 
+attached GQDs, we have used binding buffer 
+(PBS, pH =7.4, including 136.8 mM NaCl, 10.1 
+mM Na2HPO4, 2.7 mM KCl, 1.8 mM KH2PO4, 
+0.55 mM MgCl2). 
+Table S1: Size of GQDs, HNP-1, and LL-37 
+human host defense peptides attached GQDs 
+and bio-conjugated GQDs bound virus, using 
+dynamic light scattering (DLS) and TEM 
+techniques
+System
+Size 
+measured by 
+Size 
+measured by 
+S5
+DLS
+TEM
+GQDs
+5 ± 2 nm
+4 ± 2 nm
+Peptides 
+attached 
+GQDs
+7 ± 3 nm
+6 ± 2 nm
+Virus
+100 ± 30 nm
+100 ± 30 nm
+GQDs 
+bound virus
+130 ± 30 nm
+120 ± 30 nm
+For the detection of luminescence from HNP-1, 
+and LL-37 human host defense peptides attached 
+GQDs, in the presence and absence SARS-CoV-2 
+Delta Variant (B.1.617.2) spike protein RBD, we 
+have used portable fluorescence spectrometer 
+developed by us with laser excitation of 360 nm 
+diode laser 14-15,22-23. In our design, we have used 
+solid state high stability DPSS laser with 
+adjustable power of up to 50 mW laser power. 
+InPhotonics fiber optic probe has been used for 
+excitation and data collection14-15,22-23. For 
+emission signal collections, we have used 
+miniaturized QE65000 spectrometer from Ocean 
+Optics14-15,22-23. 
+All 
+measurements 
+were 
+performed with 5 ms integration time with 5 
+spectra averaging using the software14-15,22-23.
+ELISA like assay for determining the binding 
+between Delta Variant (B.1.617.2) spike 
+protein peptides attached GQDs
+For this purpose, we have used ELISA-like assay 
+using His-tag Delta variant SARS-CoV-2 S1 
+protein, which were adsorbed to a 96-well plate 
+overnight at 4 °C. 
+After that the plate was blocked using blocking 
+buffer and then different concentration peptide 
+attached GQDs were incubated on the plate. In 
+the next step, we have used streptavidin protein 
+that is covalently conjugated to horseradish 
+peroxidase (HRP) enzyme for determine the 
+binding. We have also used TMB (3,3',5,5'-
+tetramethylbenzidine) for colorimetric assay 
+detection. Signal intensity was recorded using 
+plate reader. From the binding curve, we have 
+estimated the binding constants (KD) using non-
+linear curve fitting as reported before.
+In Vitro experiment for blocking ACE2 
+binding with Baculovirus pseudotyped with a 
+SARS-CoV-2 Delta Variant (B.1.617.2) spike 
+protein    using Fluorescence Imaging:
+For this experiment we have used human 
+embryonic kidney-239T cells with a high 
+expression of ACE2 (HEK-293T). Since Delta 
+variant SARS-CoV-2 is a biosafety-level-3 virus, 
+for our experiment we have used GFP tagged 
+Baculovirus pseudotyped with a SARS-CoV-2 
+Delta Variant (B.1.617.2) spike protein (catalog 
+number 
+#C1123G). 
+For 
+this 
+experiment, 
+HEK293T cells were plated on a 96-well plate in 
+complete media (DMEM + 10% FBS) and 
+incubated under normal growth conditions (5% 
+CO2 and 37°C, protected from light) for 12-24 
+hours14-15,27-28. The pseudovirus stock (2.5 µl of 
+the 2X1010 units/ml stock) was mixed with the 
+HNP-1, and LL-37 human host defense peptides 
+attached GQDs at different concentration and 
+incubated for 1 h at 37°C, then laid over 
+HEK293T cells plated in the 96-well tissue 
+culture dishes, along with 0.6 μL of the 500 
+nM sodium butyrate. Plates were incubated at 
+37°C and 5% CO2 for one day14-15,27-28. Cells 
+were 
+fixed 
+in 
+3.7% 
+formaldehyde 
+for 
+fluorescence imaging experiment14-15,27-28. For the 
+fluorescence imaging of an Olympus IX71 
+inverted confocal fluorescence microscope fitted 
+with a SPOT Insight digital camera was used14-
+15,27-28.
+Virus inhibition for HNP-1, and LL-37 human 
+host defense peptides attached GQDs
+HEK293T cells (ATCC # CRL3216) were plated 
+on a 96-well plate in complete media (DMEM + 
+S6
+10% FBS) and incubated under normal growth 
+conditions (5% CO2 and 37°C, protected from 
+light) for 12-24 hours14-15,27-28. These HEK293T 
+cells express low levels of ACE2 receptor that is 
+sufficient 
+for 
+delta 
+variant 
+SARS-CoV-2 
+entry. Dilutions of test HNP-1, and LL-37 human 
+host defense peptides attached GQDs were made 
+in DMEM with an end volume of 100 µl each14-
+15,27-28. The GFP tagged Baculovirus pseudotyped 
+with a SARS-CoV-2 Delta Variant (B.1.617.2) 
+spike protein stock (2.5 µl of the 2X1010 units/ml 
+stock) was mixed with the HNP-1, and LL-37 
+human host defense peptides attached GQDs at 
+different concentrations and incubated for 1 h at 
+37°C, then laid over HEK293T cells plated in the 
+96-well tissue culture dishes, along with 0.6 
+μL of the 500 nM sodium butyrate (to give a final 
+concentration of 2mM) 14-15,27-28. Plates were 
+incubated at 37°C and 5% CO2 for 48 h. Cells 
+were fixed in 3.7% formaldehyde and the assay 
+was read on Cytation 5 automated fluorescent 
+microscope (BioTek Instruments, Inc., Winooski, 
+VT, USA) 14-15,27-28. The total number of cells per 
+well were counted and data was analyzed in 
+Prism 8 (Graphpad Inc) 27-28. Triplicate samples 
+were used and standard error of mean was plotted 
+as error bars14-15,27-28.
+Finding the concentration of virus
+To find out the concentration of virus, HEK293T 
+cells were plated in 12 well tissue culture dishes 
+and then the cells were infected with the virus 
+with a dilution range of 102 to 107, as we have 
+reported before 14-15,27-28.  After that, the virus 
+titers were calculated by counting the GFP 
+positive cells, as we have reported before14-15,27-
+28.
+Figure S3: A) Cell viability of normal skin 
+HaCaT cells, lung cancer A549 cells and 
+human embryonic kidney-239T cells when 
+they are treated with 60 μg/mL GQDs + 4 
+μg/mL LL-37 + 4 μg/mL HNP1 for 48 hours. 
+B) Cell viability of HEK-239T cells in the 
+absence of peptide with GQDs and when they 
+are treated with 60 μg/mL GQDs, 4 μg/mL 
+LL-37 + 4 μg/mL HNP1 peptides and 60 
+μg/mL GQDs + 4 μg/mL LL-37 + 4 μg/mL 
+HNP1, for 48 hours.
