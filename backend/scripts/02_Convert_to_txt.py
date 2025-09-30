@@ -3,9 +3,9 @@ import fitz  # PyMuPDF
 from tqdm import tqdm
 
 # Directorio donde están los PDFs descargados
-PDF_DIR = r"C:\Users\axelq\Documents\nasa-bio-ai\pdfs"
+PDF_DIR = r"C:\Users\axelq\Documents\nasa-bio-ai\backend\data\raw"
 # Directorio donde guardaremos los archivos de texto
-TXT_DIR = r"C:\Users\axelq\Documents\nasa-bio-ai\txts"
+TXT_DIR = r"C:\Users\axelq\Documents\nasa-bio-ai\backend\data\Processed"
 
 # Crear el directorio de salida si no existe
 os.makedirs(TXT_DIR, exist_ok=True)
