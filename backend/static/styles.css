@@ -1,0 +1,23 @@
+.sources-container {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #444;
+}
+
+.sources-container h4 {
+    margin: 0 0 5px 0;
+    font-size: 0.9em;
+    color: #ccc;
+}
+
+.sources-container ul {
+    margin: 0;
+    padding-left: 20px;
+    list-style-type: disc;
+}
+
+.sources-container li {
+    font-size: 0.8em;
+    color: #aaa;
+    margin-bottom: 3px;
+}

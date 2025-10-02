@@ -1,0 +1,26 @@
+<!-- filepath: c:\Users\axelq\Documents\nasa-bio-ai\frontend\index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NASA Bio AI</title>
+    <!-- Flask servirá estos archivos desde la carpeta 'static' por defecto -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <div id="app-container">
+        <h1>NASA Bio AI</h1>
+        <div id="chat-container">
+            <!-- Los mensajes del chat se añadirán aquí -->
+        </div>
+        <div id="thinking" style="display: none;">Pensando...</div>
+        <form id="query-form">
+            <input type="text" id="query-input" placeholder="Ask a question..." autocomplete="off">
+            <button type="submit">Send</button>
+        </form>
+    </div>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

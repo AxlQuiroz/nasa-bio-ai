@@ -1,25 +1,27 @@
-
 import os
 import faiss
-from sentence_transformers import SentenceTransformer
+from sentence_transformers import SentenceTransformer, CrossEncoder
 import json
 from llama_cpp import Llama
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, Response
+import time 
 
 # --- 1. INICIALIZACIÓN DE LA APLICACIÓN FLASK ---
-app = Flask(__name__, static_folder='../frontend/static', template_folder='../frontend')
+app = Flask(__name__)
 
 # --- 2. CARGA DE MODELOS (SE HACE UNA SOLA VEZ AL INICIAR EL SERVIDOR) ---
 print("Cargando componentes de la IA... Esto puede tardar varios minutos.")
 
-# Rutas a los datos
-TXT_DIR = r"C:\Users\axelq\Documents\nasa-bio-ai\backend\data\Processed"
-INDEX_FILE = r"C:\Users\axelq\Documents\nasa-bio-ai\backend\data\faiss_index.bin"
-METADATA_FILE = r"C:\Users\axelq\Documents\nasa-bio-ai\backend\data\metadata.json"
-MODEL_PATH = r"C:\Users\axelq\Documents\nasa-bio-ai\backend\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"
+# Rutas a los datos (usando rutas relativas para portabilidad)
+backend_dir = os.path.dirname(os.path.abspath(__file__))
+TXT_DIR = os.path.join(backend_dir, "data", "Processed")
+INDEX_FILE = os.path.join(backend_dir, "data", "faiss_index.bin")
+METADATA_FILE = os.path.join(backend_dir, "data", "metadata.json")
+MODEL_PATH = os.path.join(backend_dir, "models", "tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf")
 
 # Carga de modelos
 retriever_model = SentenceTransformer('all-MiniLM-L6-v2')
+cross_encoder_model = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
 index = faiss.read_index(INDEX_FILE)
 with open(METADATA_FILE, "r") as f:
     metadata = json.load(f)
@@ -28,8 +30,7 @@ llm = Llama(model_path=MODEL_PATH, n_ctx=2048, verbose=False)
 
 print("¡Servidor listo! Los modelos de IA se han cargado.")
 
-# --- 3. LÓGICA DE LA IA (LAS MISMAS FUNCIONES DE TU SCRIPT) ---
-# (Copiamos las funciones get_text_chunk, retrieve_context, y generate_answer aquí)
+# --- 3. LÓGICA DE LA IA
 
 def get_text_chunk(source_file, chunk_index):
     try:
@@ -46,25 +47,52 @@ def get_text_chunk(source_file, chunk_index):
     except Exception:
         return ""
 
-def retrieve_context(query, k=5):
+def retrieve_context(query, k_retriever=20, k_reranker=4):
+    # 1. Búsqueda inicial
     query_vector = retriever_model.encode([query])
-    _, indices = index.search(query_vector, k)
-    all_chunks = [get_text_chunk(metadata[vector_id]['source_file'], metadata[vector_id]['chunk_index']) for vector_id in indices[0] if vector_id != -1]
+    _, indices = index.search(query_vector, k_retriever)
     
-    final_context = []
-    total_tokens = 0
-    CONTEXT_TOKEN_LIMIT = 1500 
+    initial_chunks_with_meta = [
+        (
+            get_text_chunk(metadata[vector_id]['source_file'], metadata[vector_id]['chunk_index']),
+            metadata[vector_id]
+        )
+        for vector_id in indices[0] if vector_id != -1
+    ]
+    
+    meaningful_chunks_with_meta = [
+        (chunk, meta) for chunk, meta in initial_chunks_with_meta if len(chunk) > 150
+    ]
 
-    for chunk in all_chunks:
+    if not meaningful_chunks_with_meta:
+        return "", []
+
+    # 2. Re-clasificación de los chunks
+    rerank_pairs = [[query, chunk] for chunk, meta in meaningful_chunks_with_meta]
+    scores = cross_encoder_model.predict(rerank_pairs)
+
+    scored_chunks_with_meta = sorted(zip(scores, meaningful_chunks_with_meta), key=lambda x: x[0], reverse=True)
+
+    # 3. Selección final y construcción del contexto
+    final_context_chunks = []
+    final_sources = set() # Usamos un set para evitar fuentes duplicadas
+    total_tokens = 0
+    CONTEXT_TOKEN_LIMIT = 1800 
+
+    for score, (chunk, meta) in scored_chunks_with_meta[:k_reranker]:
         chunk_tokens = llm.tokenize(chunk.encode("utf-8", errors="ignore"))
         if total_tokens + len(chunk_tokens) <= CONTEXT_TOKEN_LIMIT:
-            final_context.append(chunk)
+            final_context_chunks.append(chunk)
+            final_sources.add(meta['source_file']) # Añadimos el nombre del archivo
             total_tokens += len(chunk_tokens)
         else:
             break
-    return "\n\n---\n\n".join(final_context)
+            
+    context_string = "\n\n---\n\n".join(final_context_chunks)
+    return context_string, list(final_sources)
 
-def generate_answer(query, context):
+def generate_answer_stream(query, context):
+    """Genera la respuesta en modo stream, produciendo cada token."""
     prompt = f"""<|system|>
 You are an expert assistant in biology and astronautics. Answer the question based ONLY on the provided context. If the information is not in the context, say "The information is not in my documents." Do not invent anything.</s>
 <|user|>
@@ -75,10 +103,14 @@ QUESTION:
 {query}</s>
 <|assistant|>
 """
-    output = llm(prompt, max_tokens=256, stop=["</s>", "<|user|>"], echo=False)
-    if output and 'choices' in output and len(output['choices']) > 0:
-        return output['choices'][0]['text'].strip()
-    return "Error: Could not generate an answer."
+   
+    stream = llm(prompt, max_tokens=512, stop=["</s>", "<|user|>"], echo=False, temperature=0.1, stream=True)
+    
+    for output in stream:
+        if 'choices' in output and len(output['choices']) > 0:
+            token = output['choices'][0].get('text', '')
+            if token:
+                yield token
 
 # --- 4. DEFINICIÓN DE LAS RUTAS DE LA API ---
 
@@ -87,24 +119,47 @@ def home():
     """Sirve la página principal HTML."""
     return render_template('index.html')
 
+@app.route('/styles.css')
+def styles():
+    """Sirve el archivo CSS."""
+    return app.send_static_file('../frontend/styles.css')
+
+@app.route('/app.js')
+def scripts():
+    """Sirve el archivo JavaScript."""
+    return app.send_static_file('../frontend/app.js')
+
 @app.route('/ask', methods=['POST'])
 def ask():
-    """Recibe una pregunta, la procesa con la IA y devuelve una respuesta."""
+    """Recibe una pregunta, la procesa con la IA y devuelve la respuesta en stream."""
     data = request.get_json()
     query = data.get('question')
 
     if not query:
         return jsonify({'error': 'No question provided'}), 400
 
-    print(f"Recibida pregunta: {query}")
+    print(f"Recibida pregunta para streaming: {query}")
 
-    # Ejecutar el pipeline de IA
-    context = retrieve_context(query)
-    answer = generate_answer(query, context)
+    def stream_response():
+        context, sources = retrieve_context(query)
+       
+        if not context.strip():
+            yield 'data: {"token": "The information is not in my documents."}\n\n'
+            yield f"data: {json.dumps({'token': '[DONE]'})}\n\n"
+            return
 
-    print(f"Respuesta generada: {answer}")
-    
-    return jsonify({'answer': answer})
+        # Stream de los tokens de la respuesta
+        for token in generate_answer_stream(query, context):
+            yield f"data: {json.dumps({'token': token})}\n\n"
+      
+        # Una vez terminada la respuesta, enviar las fuentes
+        yield f"data: {json.dumps({'sources': sources})}\n\n"
+
+        # Señal de finalización
+        yield f"data: {json.dumps({'token': '[DONE]'})}\n\n"
+
+
+    return Response(stream_response(), mimetype='text/event-stream')
 
 # --- 5. PUNTO DE ENTRADA PARA EJECUTAR EL SERVIDOR ---
 if __name__ == '__main__':
