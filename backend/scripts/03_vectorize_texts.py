@@ -4,7 +4,7 @@ from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-backend_dir = os.path.dirname(os.path.dirname(script_dir)) # Sube dos niveles para llegar a la raíz del backend
+backend_dir = os.path.dirname(script_dir)
 TXT_DIR = os.path.join(backend_dir, "data", "Processed")
 VECTORS_DIR = os.path.join(backend_dir, "data", "Vectorized")
 
@@ -14,10 +14,9 @@ os.makedirs(VECTORS_DIR, exist_ok=True)
 
 
 # --- Carga del Modelo ---
-# all-MiniLM-L6-v2 es un modelo rápido y de buena calidad.
-# La primera vez que se ejecute, se descargará automáticamente (puede tardar un poco).
-print("Cargando el modelo de SentenceTransformer (multilingüe)...")
-model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
+# intfloat/multilingual-e5-large es un modelo de embedding multilingüe de alta calidad.
+print("Cargando el modelo de SentenceTransformer (multilingüe-e5-large)...")
+model = SentenceTransformer('intfloat/multilingual-e5-large')
 print("Modelo cargado.")
 
 # --- Función para dividir el texto en chunks ---
@@ -58,11 +57,13 @@ for txt_file in tqdm(txt_files, desc="Vectorizando archivos"):
             print(f"\n[ADVERTENCIA] El archivo {txt_file} está vacío o no generó chunks.")
             continue
 
-        # 2. Vectorizar los chunks
-        # El método model.encode() toma una lista de textos y devuelve una lista de vectores
-        embeddings = model.encode(text_chunks, show_progress_bar=False)
+        # 2. Añadir prefijo "passage: " a cada chunk para el modelo E5
+        prefixed_chunks = [f"passage: {chunk}" for chunk in text_chunks]
 
-        # 3. Guardar los vectores en un archivo .npy
+        # 3. Vectorizar los chunks con prefijo
+        embeddings = model.encode(prefixed_chunks, show_progress_bar=False)
+
+        # 4. Guardar los vectores en un archivo .npy
         # .npy es un formato binario de NumPy, muy eficiente para guardar arrays numéricos
         np.save(vector_path, embeddings)
 

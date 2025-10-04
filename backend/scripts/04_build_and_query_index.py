@@ -1,14 +1,17 @@
 import os
 import numpy as np
 import faiss
-from sentence_transformers import SentenceTransformer
+import json
 from tqdm import tqdm
+from sentence_transformers import SentenceTransformer
 
-# --- Configuración ---
-VECTORS_DIR = r"C:\Users\axelq\Documents\nasa-bio-ai\backend\data\Vectorized"
-TXT_DIR = r"C:\Users\axelq\Documents\nasa-bio-ai\backend\data\Processed"
-INDEX_FILE = r"C:\Users\axelq\Documents\nasa-bio-ai\backend\data\faiss_index.bin"
-METADATA_FILE = r"C:\Users\axelq\Documents\nasa-bio-ai\backend\data\metadata.json"
+# --- Rutas dinámicas basadas en la ubicación del script ---
+script_dir = os.path.dirname(os.path.abspath(__file__))
+backend_dir = os.path.dirname(script_dir) # Sube un nivel para llegar a la raíz del backend
+VECTORS_DIR = os.path.join(backend_dir, "data", "Vectorized")
+TXT_DIR = os.path.join(backend_dir, "data", "Processed")
+INDEX_FILE = os.path.join(backend_dir, "data", "faiss_index.bin")
+METADATA_FILE = os.path.join(backend_dir, "data", "metadata.json")
 
 # --- Carga del Modelo (el mismo que usaste para vectorizar) ---
 print("Cargando el modelo de SentenceTransformer...")
@@ -60,7 +63,6 @@ def build_index():
     faiss.write_index(index, INDEX_FILE)
     
     # Guardar los metadatos
-    import json
     with open(METADATA_FILE, "w") as f:
         json.dump(metadata, f)
         
@@ -75,7 +77,6 @@ def search(query, k=5):
     
     # Cargar el índice y los metadatos
     index = faiss.read_index(INDEX_FILE)
-    import json
     with open(METADATA_FILE, "r") as f:
         metadata = json.load(f)
 

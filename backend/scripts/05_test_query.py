@@ -5,10 +5,15 @@ from sentence_transformers import SentenceTransformer
 import json
 
 # --- Configuración de la Prueba en Inglés ---
-LANGUAGE_TO_TEST = "Inglés"
-TXT_DIR = r"C:\Users\axelq\Documents\nasa-bio-ai\backend\data\Processed"
-INDEX_FILE = r"C:\Users\axelq\Documents\nasa-bio-ai\backend\data\faiss_index.bin"
-METADATA_FILE = r"C:\Users\axelq\Documents\nasa-bio-ai\backend\data\metadata.json"
+LANGUAGE_TO_TEST = "Español"
+
+# --- Rutas dinámicas ---
+script_dir = os.path.dirname(os.path.abspath(__file__))
+backend_dir = os.path.dirname(script_dir)
+TXT_DIR = os.path.join(backend_dir, "data", "Processed")
+INDEX_FILE = os.path.join(backend_dir, "data", "faiss_index.bin")
+METADATA_FILE = os.path.join(backend_dir, "data", "metadata.json")
+MODEL_PATH = os.path.join(backend_dir, "models", "tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf")
 
 # --- Carga del Modelo (debe ser el mismo que usaste para vectorizar) ---
 print("Cargando el modelo de SentenceTransformer...")
@@ -72,15 +77,38 @@ def search(query, k=3):
         
     return results
 
+def generate_answer(query, context):
+    """Genera la respuesta a partir del contexto."""
+    prompt = f"""<|system|>
+Eres un asistente experto en biología y astronáutica. Responde la pregunta del usuario usando únicamente el contexto proporcionado. La respuesta DEBE SER EN ESPAÑOL. Si la información no está en el contexto, responde exactamente: "La información no se encuentra en mis documentos." No inventes nada.</s>
+<|user|>
+CONTEXTO:
+{context}
+
+PREGUNTA:
+{query}</s>
+<|assistant|>
+Respuesta en español:
+"""
+    # Aquí iría el código para enviar el 'prompt' a un modelo de lenguaje y obtener la respuesta.
+    # Por ahora, solo devolveremos el prompt para propósitos de depuración.
+    return prompt
+
 # --- Ejecución de la Prueba ---
 if __name__ == "__main__":
-    # Haz una pregunta en español
-    pregunta = "¿Cuáles son los efectos de la microgravedad en los huesos humanos?"
+    # --- PREGUNTA DE PRUEBA ---
+    # Cambiamos la pregunta a español para probar el modelo multilingüe
+    query = "¿Qué efectos tiene la microgravedad en los huesos?"
 
     # Ejecuta la búsqueda con la pregunta
-    contexto_recuperado = search(pregunta)
+    contexto_recuperado = search(query)
+
+    # Generar la respuesta a partir del contexto recuperado
+    respuesta = generate_answer(query, " ".join(contexto_recuperado))
 
     # Este 'contexto_recuperado' es lo que le pasarías a un modelo como GPT para que genere la respuesta final.
     print("\n" + "-" * 50)
     print("Contexto recuperado listo para ser enviado a un LLM:")
     print(contexto_recuperado)
+    print("\nRespuesta generada:")
+    print(respuesta)
