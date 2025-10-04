@@ -3,6 +3,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const queryInput = document.getElementById('query-input');
   const chatContainer = document.getElementById('chat-container');
   const thinkingIndicator = document.getElementById('thinking');
+  const submitButton = document.getElementById('submit-button');
+
+  let myChart = null; // Variable para guardar la instancia del gráfico
 
   // Opcional: ajustes de marked
   marked.setOptions({
@@ -22,14 +25,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const query = queryInput.value.trim();
     if (!query) return;
 
-  // Lee filtros (sácalos del DOM aquí)
-  const year = (document.getElementById('filter-year')?.value || '').trim();
-  const topic = (document.getElementById('filter-topic')?.value || '').trim();
-  const impact = (document.getElementById('filter-impact')?.value || '').trim();
-  const progressArea = (document.getElementById('filter-progress-area')?.value || '').trim();
-  const knowledgeGap = (document.getElementById('filter-knowledge-gap')?.value || '').trim();
-  const consensusArea = (document.getElementById('filter-consensus-area')?.value || '').trim();
-  const disagreementArea = (document.getElementById('filter-disagreement-area')?.value || '').trim();
+    // Lee filtros (sácalos del DOM aquí)
+    const year = (document.getElementById('filter-year')?.value || '').trim();
+    const topic = (document.getElementById('filter-topic')?.value || '').trim();
+    const impact = (document.getElementById('filter-impact')?.value || '').trim();
+    const progressArea = (document.getElementById('filter-progress-area')?.value || '').trim();
+    const knowledgeGap = (document.getElementById('filter-knowledge-gap')?.value || '').trim();
+    const consensusArea = (document.getElementById('filter-consensus-area')?.value || '').trim();
+    const disagreementArea = (document.getElementById('filter-disagreement-area')?.value || '').trim();
 
     addMessage('user', escapeHtml(query));
     queryInput.value = '';
@@ -120,7 +123,12 @@ document.addEventListener('DOMContentLoaded', () => {
               setThinking(false);
               break; // salimos del while interno; el externo romperá al terminar el stream
             }
-            appendMarkdown(botTextElement, data.token);
+            // --- LÍNEA CLAVE AÑADIDA ---
+            // Reemplaza cualquier salto de línea (\n, \r) por un espacio
+            const cleanToken = data.token.replace(/(\r\n|\n|\r)/gm, " ");
+            
+            // Usamos el token limpio para añadirlo al HTML
+            appendMarkdown(botTextElement, cleanToken);
             smoothScroll();
           }
 
@@ -147,6 +155,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  submitButton.addEventListener('click', () => {
+    // Limpia la respuesta anterior
+    chatContainer.innerHTML = '';
+    if (myChart) {
+        myChart.destroy();
+        document.getElementById('chart-container').classList.add('hidden');
+    }
+  });
+
   function addMessage(sender, markdownText) {
     const messageContainer = document.createElement('div');
     messageContainer.classList.add('message', `${sender}-message`);
@@ -163,10 +180,11 @@ document.addEventListener('DOMContentLoaded', () => {
     return messageContainer;
   }
 
-  function appendMarkdown(targetP, chunkMarkdown) {
-    const rawHtml = marked.parse(chunkMarkdown);
-    const safeHtml = (window.DOMPurify ? DOMPurify.sanitize(rawHtml) : rawHtml);
-    targetP.insertAdjacentHTML('beforeend', safeHtml);
+  function appendMarkdown(targetP, chunkText) {
+    // Simplemente añade el texto directamente para evitar que 'marked' cree nuevos párrafos por cada token.
+    // Esto trata el texto como texto plano y lo añade al párrafo existente.
+    const textNode = document.createTextNode(chunkText);
+    targetP.appendChild(textNode);
   }
 
   function addSources(botMessageContainer, sources) {
