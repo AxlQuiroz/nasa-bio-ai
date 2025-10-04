@@ -106,5 +106,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         sourcesContainer.appendChild(list);
         botMessageContainer.appendChild(sourcesContainer);
+
+    // Filtros dinámicos
+    const year = document.getElementById('filter-year').value;
+    const topic = document.getElementById('filter-topic').value;
+    const impact = document.getElementById('filter-impact').value;
+
+    const filterSummary = `🔍 Filtros aplicados: 
+        ${year || "Todos los años"} | 
+        ${topic || "Todos los temas"} | 
+        ${impact || "Todos los impactos"}`;
+    
+    addMessage('bot', filterSummary);
     }
 });
