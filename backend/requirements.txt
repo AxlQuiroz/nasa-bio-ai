@@ -1,0 +1,18 @@
+# --- Backend y API ---
+Flask
+gunicorn
+llama-cpp-python
+
+# --- Machine Learning y Vectorización ---
+sentence-transformers
+faiss-cpu
+numpy
+scikit-learn
+torch
+tqdm
+
+# --- Scripts de Procesamiento de Datos ---
+selenium
+requests
+beautifulsoup4
+PyPDF2
