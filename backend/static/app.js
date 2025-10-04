@@ -25,135 +25,109 @@ document.addEventListener('DOMContentLoaded', () => {
     const query = queryInput.value.trim();
     if (!query) return;
 
-    // Lee filtros (sácalos del DOM aquí)
-    const year = (document.getElementById('filter-year')?.value || '').trim();
-    const topic = (document.getElementById('filter-topic')?.value || '').trim();
-    const impact = (document.getElementById('filter-impact')?.value || '').trim();
-    const progressArea = (document.getElementById('filter-progress-area')?.value || '').trim();
-    const knowledgeGap = (document.getElementById('filter-knowledge-gap')?.value || '').trim();
-    const consensusArea = (document.getElementById('filter-consensus-area')?.value || '').trim();
-    const disagreementArea = (document.getElementById('filter-disagreement-area')?.value || '').trim();
+    answerDiv.innerHTML = '';
+    sourcesDiv.innerHTML = '';
+    thinkingSpan.style.display = 'inline';
 
-    addMessage('user', escapeHtml(query));
-    queryInput.value = '';
-    setThinking(true);
-
-    const botMessageContainer = addMessage('bot', '');
-    const botTextElement = botMessageContainer.querySelector('p');
+    let fullResponse = "";
+    let sources = [];
 
     try {
-      const response = await fetch('/ask', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          question: query,
-          filters: {
-            year,
-            topic,
-            impact,
-            progressArea,
-            knowledgeGap,
-            consensusArea,
-            disagreementArea
-          } // <<<<<< manda filtros al backend
-        }),
-      });
+        const response = await fetch('/ask', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ question: query })
+        });
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status} ${response.statusText}`);
-      }
-      if (!response.body) {
-        throw new Error('No streaming body (response.body === null)');
-      }
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
+        while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
 
-      // Parser SSE robusto
-      let buffer = '';
-      let gotFirstToken = false;
+            const chunk = decoder.decode(value);
+            const lines = chunk.split('\n').filter(line => line.trim() !== '');
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+            for (const line of lines) {
+                if (line.startsWith('data:')) {
+                    const dataStr = line.substring(5).trim();
+                    try {
+                        const data = JSON.parse(dataStr);
 
-        buffer += decoder.decode(value, { stream: true });
-
-        // Soporta \r\n y eventos SSE multi-línea:
-        let eventBoundary;
-        while ((eventBoundary = buffer.indexOf('\n\n')) !== -1) {
-          const rawEvent = buffer.slice(0, eventBoundary);
-          buffer = buffer.slice(eventBoundary + 2);
-
-          const lines = rawEvent.split(/\r?\n/);
-          let eventType = 'message';
-          let dataLines = [];
-
-          for (const line of lines) {
-            if (!line) continue;
-            if (line.startsWith(':')) continue; // comentario/keep-alive
-            if (line.startsWith('event:')) {
-              eventType = line.slice(6).trim();
-            } else if (line.startsWith('data:')) {
-              dataLines.push(line.slice(5).trim());
+                        if (data.token === '[DONE]') {
+                            thinkingSpan.style.display = 'none';
+                            processFinalResponse(fullResponse, answerDiv);
+                            displaySources(sources, sourcesDiv);
+                            return;
+                        }
+                        if (data.sources) {
+                            sources = data.sources;
+                        } else if (data.token) {
+                            fullResponse += data.token;
+                        }
+                    } catch (e) {
+                        console.error('Error parsing JSON from stream:', dataStr, e);
+                    }
+                }
             }
-          }
-
-          const dataStr = dataLines.join('\n');
-          if (!dataStr) continue;
-
-          if (!gotFirstToken) {
-            // Oculta “pensando” en el PRIMER token válido
-            setThinking(false);
-            gotFirstToken = true;
-          }
-
-          // Cada evento debe ser un JSON
-          let data;
-          try {
-            data = JSON.parse(dataStr);
-          } catch (err) {
-            console.warn('JSON chunk inválido:', dataStr);
-            continue;
-          }
-
-          // Protocolo: { token?: string, sources?: [...], meta?: {...} }
-          if (data.token) {
-            if (data.token === '[DONE]') {
-              setThinking(false);
-              break; // salimos del while interno; el externo romperá al terminar el stream
-            }
-            // --- LÍNEA CLAVE AÑADIDA ---
-            // Reemplaza cualquier salto de línea (\n, \r) por un espacio
-            const cleanToken = data.token.replace(/(\r\n|\n|\r)/gm, " ");
-            
-            // Usamos el token limpio para añadirlo al HTML
-            appendMarkdown(botTextElement, cleanToken);
-            smoothScroll();
-          }
-
-          if (Array.isArray(data.sources) && data.sources.length) {
-            // Renderiza fuentes una sola vez por mensaje
-            if (!botMessageContainer.querySelector('.sources-container')) {
-              addSources(botMessageContainer, data.sources);
-            }
-          }
         }
-      }
-
-      setThinking(false);
-
-      // Opcional: si no hubo tokens, muestra aviso
-      if (!botTextElement.innerText.trim()) {
-        botTextElement.textContent = 'No recibí contenido. Intenta ajustar tu consulta o filtros.';
-      }
-
     } catch (error) {
-      console.error('Stream error:', error);
-      botTextElement.textContent = 'Error: no pude conectar con el servidor de streaming.';
-      setThinking(false);
+        console.error('Error fetching response:', error);
+        thinkingSpan.style.display = 'none';
+        answerDiv.innerHTML = '<p class="error">Error al obtener la respuesta del servidor.</p>';
     }
-  });
+});
+
+function processFinalResponse(response, targetElement) {
+    const jsonStartIndex = response.indexOf('{');
+    let textResponse = response;
+    let graphData = null;
+
+    if (jsonStartIndex !== -1) {
+        textResponse = response.substring(0, jsonStartIndex).trim();
+        const jsonString = response.substring(jsonStartIndex);
+        try {
+            const jsonData = JSON.parse(jsonString);
+            if (jsonData.graph_data) {
+                graphData = jsonData.graph_data;
+            }
+        } catch (e) {
+            console.warn("Could not parse JSON from the end of the response.", e);
+        }
+    }
+
+    targetElement.innerHTML = ''; // Limpiar contenido anterior
+    const responseP = document.createElement('p');
+    responseP.innerHTML = marked.parse(textResponse);
+    targetElement.appendChild(responseP);
+
+    if (graphData) {
+        console.log("Datos del Grafo de Conocimiento recibidos:", graphData);
+        const graphTitle = document.createElement('h3');
+        graphTitle.textContent = 'Conceptos Clave (Datos para el Grafo)';
+        targetElement.appendChild(graphTitle);
+        const graphPre = document.createElement('pre');
+        graphPre.textContent = JSON.stringify(graphData, null, 2);
+        targetElement.appendChild(graphPre);
+    }
+}
+
+function displaySources(sources, targetElement) {
+    if (sources.length > 0) {
+        const title = document.createElement('h3');
+        title.textContent = 'Fuentes Consultadas:';
+        targetElement.appendChild(title);
+
+        const list = document.createElement('ul');
+        sources.forEach(source => {
+            const item = document.createElement('li');
+            item.textContent = source;
+            list.appendChild(item);
+        });
+        targetElement.appendChild(list);
+    }
+}
 
   submitButton.addEventListener('click', () => {
     // Limpia la respuesta anterior

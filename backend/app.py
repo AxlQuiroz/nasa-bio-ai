@@ -94,12 +94,25 @@ def retrieve_context(query, k_retriever=20, k_reranker=4):
 def generate_answer_stream(query, context):
     """Genera la respuesta en modo stream, produciendo cada token."""
     prompt = f"""<|system|>
-You are an expert assistant in biology and astronautics. Answer the question based ONLY on the provided context. If the information is not in the context, say "The information is not in my documents." Do not invent anything.</s>
+Usted es un asistente experto en biología y astronáutica. Su tarea es doble:
+1. Primero, responda la pregunta del usuario de forma concisa basándose ÚNICAMENTE en el contexto proporcionado.
+2. Después de la respuesta, en una nueva línea, genere un objeto JSON que represente un grafo de conocimiento de los conceptos clave. El JSON debe tener una clave "graph_data" que contenga una lista de objetos, donde cada objeto tiene "source", "target" y "relationship".
+
+Si la información no está en el contexto, responda únicamente "La información no se encuentra en mis documentos." y no genere el JSON. No invente nada.
+Su respuesta DEBE seguir este formato:
+Respuesta en texto...
+{{
+  "graph_data": [
+    {{"source": "concepto1", "target": "concepto2", "relationship": "es parte de"}},
+    {{"source": "concepto3", "target": "concepto4", "relationship": "causa"}}
+  ]
+}}
+</s>
 <|user|>
-CONTEXT:
+CONTEXTO:
 {context}
 
-QUESTION:
+PREGUNTA:
 {query}</s>
 <|assistant|>
 """
