@@ -20,7 +20,7 @@ METADATA_FILE = os.path.join(backend_dir, "data", "metadata.json")
 MODEL_PATH = os.path.join(backend_dir, "models", "tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf")
 
 # Carga de modelos
-retriever_model = SentenceTransformer('all-MiniLM-L6-v2')
+retriever_model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
 cross_encoder_model = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
 index = faiss.read_index(INDEX_FILE)
 with open(METADATA_FILE, "r") as f:
@@ -118,16 +118,6 @@ QUESTION:
 def home():
     """Sirve la página principal HTML."""
     return render_template('index.html')
-
-@app.route('/styles.css')
-def styles():
-    """Sirve el archivo CSS."""
-    return app.send_static_file('../frontend/styles.css')
-
-@app.route('/app.js')
-def scripts():
-    """Sirve el archivo JavaScript."""
-    return app.send_static_file('../frontend/app.js')
 
 @app.route('/ask', methods=['POST'])
 def ask():

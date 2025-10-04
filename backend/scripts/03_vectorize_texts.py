@@ -3,19 +3,21 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 
-# Directorio donde están los archivos de texto procesados
-TXT_DIR = r"C:\Users\axelq\Documents\nasa-bio-ai\backend\data\Processed"
-# Directorio donde guardaremos los vectores (embeddings)
-VECTORS_DIR = r"C:\Users\axelq\Documents\nasa-bio-ai\backend\data\Vectorized"
+script_dir = os.path.dirname(os.path.abspath(__file__))
+backend_dir = os.path.dirname(os.path.dirname(script_dir)) # Sube dos niveles para llegar a la raíz del backend
+TXT_DIR = os.path.join(backend_dir, "data", "Processed")
+VECTORS_DIR = os.path.join(backend_dir, "data", "Vectorized")
+
 
 # Crear el directorio de salida si no existe
 os.makedirs(VECTORS_DIR, exist_ok=True)
 
+
 # --- Carga del Modelo ---
 # all-MiniLM-L6-v2 es un modelo rápido y de buena calidad.
 # La primera vez que se ejecute, se descargará automáticamente (puede tardar un poco).
-print("Cargando el modelo de SentenceTransformer...")
-model = SentenceTransformer('all-MiniLM-L6-v2')
+print("Cargando el modelo de SentenceTransformer (multilingüe)...")
+model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
 print("Modelo cargado.")
 
 # --- Función para dividir el texto en chunks ---
