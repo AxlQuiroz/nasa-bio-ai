@@ -22,10 +22,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const query = queryInput.value.trim();
     if (!query) return;
 
-    // Lee filtros (sácalos del DOM aquí)
-    const year = (document.getElementById('filter-year')?.value || '').trim();
-    const topic = (document.getElementById('filter-topic')?.value || '').trim();
-    const impact = (document.getElementById('filter-impact')?.value || '').trim();
+  // Lee filtros (sácalos del DOM aquí)
+  const year = (document.getElementById('filter-year')?.value || '').trim();
+  const topic = (document.getElementById('filter-topic')?.value || '').trim();
+  const impact = (document.getElementById('filter-impact')?.value || '').trim();
+  const progressArea = (document.getElementById('filter-progress-area')?.value || '').trim();
+  const knowledgeGap = (document.getElementById('filter-knowledge-gap')?.value || '').trim();
+  const consensusArea = (document.getElementById('filter-consensus-area')?.value || '').trim();
+  const disagreementArea = (document.getElementById('filter-disagreement-area')?.value || '').trim();
 
     addMessage('user', escapeHtml(query));
     queryInput.value = '';
@@ -40,7 +44,15 @@ document.addEventListener('DOMContentLoaded', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           question: query,
-          filters: { year, topic, impact } // <<<<<< manda filtros al backend
+          filters: {
+            year,
+            topic,
+            impact,
+            progressArea,
+            knowledgeGap,
+            consensusArea,
+            disagreementArea
+          } // <<<<<< manda filtros al backend
         }),
       });
 
@@ -204,12 +216,16 @@ document.addEventListener('DOMContentLoaded', () => {
     sourcesContainer.appendChild(list);
     botMessageContainer.appendChild(sourcesContainer);
 
-    // Inserta un resumen de filtros aplicado (solo informativo)
-    const fy = document.getElementById('filter-year')?.value || 'Todos los años';
-    const ft = document.getElementById('filter-topic')?.value || 'Todos los temas';
-    const fi = document.getElementById('filter-impact')?.value || 'Todos los impactos';
+  // Inserta un resumen de filtros aplicado (solo informativo)
+  const fy = document.getElementById('filter-year')?.value || 'Todos los años';
+  const ft = document.getElementById('filter-topic')?.value || 'Todos los temas';
+  const fi = document.getElementById('filter-impact')?.value || 'Todos los impactos';
+  const fp = document.getElementById('filter-progress-area')?.value || 'Todas las áreas de progreso';
+  const fg = document.getElementById('filter-knowledge-gap')?.value || 'Todas las lagunas de conocimiento';
+  const fc = document.getElementById('filter-consensus-area')?.value || 'Todas las áreas de consenso';
+  const fd = document.getElementById('filter-disagreement-area')?.value || 'Todas las áreas de desacuerdo';
 
-    addMessage('bot', `🔍 **Filtros aplicados**: ${fy} | ${ft} | ${fi}`);
+  addMessage('bot', `🔍 **Filtros aplicados**: ${fy} | ${ft} | ${fi} | ${fp} | ${fg} | ${fc} | ${fd}`);
   }
 
   function setThinking(show) {
