@@ -14,8 +14,7 @@ os.makedirs(VECTORS_DIR, exist_ok=True)
 
 
 # --- Carga del Modelo ---
-# intfloat/multilingual-e5-large es un modelo de embedding multilingüe de alta calidad.
-print("Cargando el modelo de SentenceTransformer (multilingüe-e5-large)...")
+print("Cargando el modelo de SentenceTransformer (multilingüe-e5-base)...")
 model = SentenceTransformer('intfloat/multilingual-e5-large')
 print("Modelo cargado.")
 
@@ -37,16 +36,16 @@ print(f"Se encontraron {len(txt_files)} archivos de texto para vectorizar.")
 for txt_file in tqdm(txt_files, desc="Vectorizando archivos"):
     txt_path = os.path.join(TXT_DIR, txt_file)
     
-    # El archivo de salida para los vectores tendrá extensión .npy
+   
     vector_filename = os.path.splitext(txt_file)[0] + ".npy"
     vector_path = os.path.join(VECTORS_DIR, vector_filename)
 
-    # Revisar si el archivo ya fue vectorizado
+  
     if os.path.exists(vector_path):
         continue
 
     try:
-        # Leer el contenido del archivo de texto
+      
         with open(txt_path, "r", encoding="utf-8") as f:
             content = f.read()
 
@@ -57,14 +56,25 @@ for txt_file in tqdm(txt_files, desc="Vectorizando archivos"):
             print(f"\n[ADVERTENCIA] El archivo {txt_file} está vacío o no generó chunks.")
             continue
 
-        # 2. Añadir prefijo "passage: " a cada chunk para el modelo E5
-        prefixed_chunks = [f"passage: {chunk}" for chunk in text_chunks]
+        # 2. Vectorizar los chunks en lotes para no agotar la memoria
+        batch_size = 64
+        all_embeddings = []
+        
+        # Añadimos una barra de progreso para los lotes dentro de un archivo
+        for i in tqdm(range(0, len(text_chunks), batch_size), desc=f"  -> Chunks en {txt_file}", leave=False):
+            batch_chunks = text_chunks[i:i + batch_size]
+            prefixed_batch = [f"passage: {chunk}" for chunk in batch_chunks]
+            
+            batch_embeddings = model.encode(prefixed_batch, show_progress_bar=False)
+            all_embeddings.append(batch_embeddings)
 
-        # 3. Vectorizar los chunks con prefijo
-        embeddings = model.encode(prefixed_chunks, show_progress_bar=False)
+        if not all_embeddings:
+            continue
 
-        # 4. Guardar los vectores en un archivo .npy
-        # .npy es un formato binario de NumPy, muy eficiente para guardar arrays numéricos
+        # 3. Unir los embeddings de todos los lotes
+        embeddings = np.vstack(all_embeddings)
+
+        # 4. Guardar los vectores
         np.save(vector_path, embeddings)
 
     except Exception as e:

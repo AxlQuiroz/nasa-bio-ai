@@ -20,7 +20,7 @@ METADATA_FILE = os.path.join(backend_dir, "data", "metadata.json")
 MODEL_PATH = os.path.join(backend_dir, "models", "tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf")
 
 # Carga de modelos
-retriever_model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
+retriever_model = SentenceTransformer('intfloat/multilingual-e5-large')
 cross_encoder_model = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
 index = faiss.read_index(INDEX_FILE)
 with open(METADATA_FILE, "r") as f:

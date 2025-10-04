@@ -17,7 +17,7 @@ MODEL_PATH = os.path.join(backend_dir, "models", "tinyllama-1.1b-chat-v1.0.Q4_K_
 
 # --- Carga del Modelo (debe ser el mismo que usaste para vectorizar) ---
 print("Cargando el modelo de SentenceTransformer...")
-model = SentenceTransformer('all-MiniLM-L6-v2')
+model = SentenceTransformer('intfloat/multilingual-e5-large')
 print("Modelo cargado.")
 
 # --- Carga del Índice y Metadatos ---
