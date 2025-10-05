@@ -1,0 +1,111 @@
+import os
+import numpy as np
+from sentence_transformers import SentenceTransformer
+from tqdm import tqdm
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+backend_dir = os.path.dirname(script_dir)
+TXT_DIR = os.path.join(backend_dir, "data", "Processed")
+VECTORS_DIR = os.path.join(backend_dir, "data", "Vectorized")
+
+
+# Crear el directorio de salida si no existe
+os.makedirs(VECTORS_DIR, exist_ok=True)
+
+
+# --- Carga del Modelo ---
+print("Cargando el modelo de SentenceTransformer (multilingüe-e5-base)...")
+model = SentenceTransformer('intfloat/multilingual-e5-large')
+print("Modelo cargado.")
+
+# --- Función para identificar la sección ---
+def get_section(chunk_text):
+    """Identifica la sección del texto basándose en palabras clave."""
+    text_lower = chunk_text.lower()
+    if 'introduction' in text_lower or 'background' in text_lower:
+        return 'Introduction'
+    if 'results' in text_lower or 'findings' in text_lower:
+        return 'Results'
+    if 'conclusion' in text_lower or 'discussion' in text_lower:
+        return 'Conclusion'
+    if 'methods' in text_lower or 'materials' in text_lower:
+        return 'Methods'
+    return 'Body' # Sección por defecto
+
+# --- Función para dividir el texto en chunks ---
+def chunk_text(text, chunk_size=512, overlap=50):
+    """Divide el texto en chunks con un ligero solapamiento."""
+    words = text.split()
+    chunks_with_meta = []
+    for i in range(0, len(words), chunk_size - overlap):
+        chunk_content = " ".join(words[i:i + chunk_size])
+        section = get_section(chunk_content)
+        chunk_index = len(chunks_with_meta)
+        chunks_with_meta.append({
+            "content": chunk_content,
+            "section": section,
+            "chunk_index": chunk_index
+        })
+    return chunks_with_meta
+
+# --- Procesamiento de archivos ---
+txt_files = [f for f in os.listdir(TXT_DIR) if f.endswith(".txt")]
+
+print(f"Se encontraron {len(txt_files)} archivos de texto para vectorizar.")
+
+for txt_file in tqdm(txt_files, desc="Vectorizando archivos"):
+    txt_path = os.path.join(TXT_DIR, txt_file)
+    
+    base_filename = os.path.splitext(txt_file)[0]
+    vector_filename = base_filename + ".npy"
+    metadata_filename = base_filename + "_meta.json" # Archivo de metadatos temporal
+    
+    vector_path = os.path.join(VECTORS_DIR, vector_filename)
+    metadata_path = os.path.join(VECTORS_DIR, metadata_filename) # Guardar en el mismo dir
+
+    if os.path.exists(vector_path) and os.path.exists(metadata_path):
+        continue
+
+    try:
+        with open(txt_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        # 1. Dividir el texto en chunks con metadatos (incluida la sección)
+        chunks_with_meta = chunk_text(content)
+        
+        if not chunks_with_meta:
+            print(f"\n[ADVERTENCIA] El archivo {txt_file} está vacío o no generó chunks.")
+            continue
+        
+        text_chunks = [item['content'] for item in chunks_with_meta]
+        chunk_metadata = [{ "section": item['section'], "chunk_index": item['chunk_index'] } for item in chunks_with_meta]
+
+        # 2. Vectorizar los chunks en lotes
+        batch_size = 64
+        all_embeddings = []
+        
+        # Añadimos una barra de progreso para los lotes dentro de un archivo
+        for i in tqdm(range(0, len(text_chunks), batch_size), desc=f"  -> Chunks en {txt_file}", leave=False):
+            batch_chunks = text_chunks[i:i + batch_size]
+            prefixed_batch = [f"passage: {chunk}" for chunk in batch_chunks]
+            
+            batch_embeddings = model.encode(prefixed_batch, show_progress_bar=False)
+            all_embeddings.append(batch_embeddings)
+
+        if not all_embeddings:
+            continue
+
+        # 3. Unir los embeddings de todos los lotes
+        embeddings = np.vstack(all_embeddings)
+
+        # 4. Guardar los vectores y los metadatos temporales
+        np.save(vector_path, embeddings)
+        with open(metadata_path, "w", encoding="utf-8") as f:
+            import json
+            json.dump(chunk_metadata, f)
+
+    except Exception as e:
+        print(f"\n[ERROR] No se pudo procesar el archivo {txt_file}: {e}")
+
+print("\nVectorización de todos los archivos completada.")
+print(f"Los vectores se han guardado en: {VECTORS_DIR}")
