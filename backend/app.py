@@ -11,20 +11,10 @@ load_dotenv() # Carga las variables de entorno desde el archivo .env
 
 # --- Rutas dinámicas ---
 backend_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.dirname(backend_dir)
-frontend_folder = os.path.join(project_root, 'frontend')
+static_folder = os.path.join(backend_dir, 'static')
+static2_folder = os.path.join(backend_dir, 'static2')
 
-# --- INICIO DE DEPURACIÓN ---
-print("--- DEBUGGING PATHS ---")
-print(f"Backend directory: {backend_dir}")
-print(f"Project root: {project_root}")
-print(f"Calculated frontend folder: {frontend_folder}")
-print(f"Does frontend folder exist? {os.path.exists(frontend_folder)}")
-print("-----------------------")
-# --- FIN DE DEPURACIÓN ---
-
-# Inicialización de Flask
-app = Flask(__name__, static_url_path='', static_folder='static')
+app = Flask(__name__)
 
 # --- 2. CARGA DE COMPONENTES (SE HACE UNA SOLA VEZ) ---
 print("Cargando componentes de la IA...")
@@ -239,10 +229,30 @@ def ask():
 
     return Response(stream_response(), mimetype='text/event-stream')
 
-# --- RUTA PARA SERVIR EL FRONTEND ---
+# --- RUTAS PARA SERVIR EL FRONTEND ---
+
+# 1. Ruta para la página de bienvenida (landing page)
 @app.route('/')
-def root():
-    return app.send_static_file('index.html')
+def landing_page():
+    # Sirve el index.html desde la carpeta 'static2'
+    return send_from_directory(static2_folder, 'index.html')
+
+# 2. Ruta para la página del chat con la IA
+@app.route('/chat')
+def chat_page():
+    # Sirve el chatbot.html directamente desde la carpeta 'static'
+    return send_from_directory(static_folder, 'chatbot.html')
+
+# 3. Rutas para servir los archivos de cada página (CSS, JS, etc.)
+@app.route('/static/<path:filename>')
+def serve_chat_assets(filename):
+    # Sirve los archivos necesarios para la página de chat
+    return send_from_directory(static_folder, filename)
+
+@app.route('/static2/<path:filename>')
+def serve_landing_assets(filename):
+    # Sirve los archivos necesarios para la página de bienvenida
+    return send_from_directory(static2_folder, filename)
 
 # --- 5. PUNTO DE ENTRADA ---
 if __name__ == '__main__':

@@ -1,6 +1,6 @@
 # --- Backend y API ---
 Flask
-gunicorn
+no, gunicorn
 llama-cpp-python
 
 # --- Machine Learning y Vectorización ---
