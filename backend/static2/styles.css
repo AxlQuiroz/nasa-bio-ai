@@ -7,7 +7,7 @@
     
 }
 body {
-    background-color: #1f0336;
+    background-color: #e0e0e0;
     color: #ffffff;
     display: flex;
     flex-direction: column;
@@ -17,9 +17,7 @@ body {
     padding: 20px;
     margin: 0;
     }
-header {
-    background-color: #7c86c7;
-    background-color: #1f0336;
+    background-color: #e0e0e0;
     color: #FFFFFF;
     text-shadow: 2px 2px 30px #3FA9F5;
     text-align: center;
@@ -34,8 +32,7 @@ header {
 }
 
 
-.container {
-    background-color: #1f0336;
+    background-color: #e0e0e0;
     padding: 20px;
     border-radius: 5px;
     box-shadow: 0 0 10px rgba(53, 49, 49, 0.5);
@@ -59,20 +56,18 @@ header {
     font-style: italic;
     margin-bottom: 20px;
     text-align: center;
-    font-size: 1.2em;
-}
-form {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    width: 100%;
-}
-#query-input {
-    flex-grow: 1;
-    padding: 10px;
-    border: none;
-    border-radius: 5px;
-    font-size: 1em;
+    header {
+        background-color: #e0e0e0;
+        color: #3a5ca8;
+        text-shadow: none;
+        text-align: center;
+        font-size: 2em;
+        padding: 20px 0;
+        margin-bottom: 20px;
+        width: 100%;
+        position: relative;
+        border-radius: 5px;
+    }
     transition: box-shadow 0.3s ease
 ;
 }
@@ -89,6 +84,21 @@ form {
 }
 #query {
     background-color: #334ec6;
+    .container {
+        background-color: #e0e0e0;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(53, 49, 49, 0.05);
+        width: 100%;
+        max-width: 800px;
+        flex-grow: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 20px;
+    }
     color: #FFFFFF;
     border: none;
     padding: 10px;
