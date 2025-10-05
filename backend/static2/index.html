@@ -6,32 +6,22 @@
     <title>NASA WEB SITE</title>
     <link rel="stylesheet" href="styles.css"> 
     <script src="script.js" defer></script>
-</head>
 <body>
+    <header>
+        <nav class="nav-menu" style="background-color: #1f0336; padding: 10px 0;">
+            <ul style="display: flex; gap: 20px; justify-content: center; list-style: none; margin: 0; padding: 0;">
+                <li><a href="index.html" style="color: #D6F03C; text-decoration: none; font-weight: bold;">Inicio</a></li>
+                <li><a href="chatbot.html" style="color: #D6F03C; text-decoration: none; font-weight: bold;">Chatbot</a></li>
+            </ul>
+        </nav>
+    </header>
 
-<header>
-    <h1>NASA</h1>
-    <img alt="NASA Space Apps Challenge Logo" loading="lazy" width="90" height="80" decoding="async" data-nimg="1" style="color:transparent" src="https://www.nasa.gov/wp-content/themes/nasa/assets/images/nasa-logo@2x.png">
-</header>
+    <section class="hero" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px 40px 20px; background: linear-gradient(90deg, #1f0336 60%, #334ec6 100%); border-radius: 10px; margin: 30px 0;">
+        <h1 style="font-size: 2.5em; color: #D6F03C; margin-bottom: 20px; text-align: center;">Explora la ciencia de la NASA con IA</h1>
+        <p style="font-size: 1.2em; color: #fff; max-width: 700px; text-align: center; margin-bottom: 10px;">
+            Este proyecto utiliza inteligencia artificial para analizar y responder preguntas sobre publicaciones científicas de la NASA. Descubre áreas de progreso, lagunas de conocimiento y tendencias científicas de manera interactiva y visual. ¡Explora el conocimiento espacial con tecnología de vanguardia!
+        </p>
+    </section>
 
- <div class="container">
-        <form id="query-form">
-            <input type="text" id="query" placeholder="Search an article..." autocomplete="off">
-            <button type="submit" id="submit-button">Search</button>
-        </form>
-
-        <div id="thinking" style="display: none;">Pensando...</div>
-
-        <div id="answer"></div>
-        <div id="sources"></div>
-        
-        <div id="knowledge-graph"></div>
-    </div>
-
-<footer>
-    <p>&copy; 2023 NASA. All rights reserved.</p>
-</footer>
-
-
+    <!-- Puedes agregar más contenido aquí si lo deseas -->
 </body>
-</html>
