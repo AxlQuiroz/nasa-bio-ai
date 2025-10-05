@@ -13,61 +13,83 @@ TXT_DIR = os.path.join(backend_dir, "data", "Processed")
 INDEX_FILE = os.path.join(backend_dir, "data", "faiss_index.bin")
 METADATA_FILE = os.path.join(backend_dir, "data", "metadata.json")
 
-# --- Carga del Modelo (el mismo que usaste para vectorizar) ---
-print("Cargando el modelo de SentenceTransformer...")
-model = SentenceTransformer('all-MiniLM-L6-v2')
+# --- Carga del Modelo (debe ser el mismo que se usó para vectorizar) ---
+print("Cargando el modelo de SentenceTransformer (multilingual-e5-large)...")
+model = SentenceTransformer('intfloat/multilingual-e5-large')
 print("Modelo cargado.")
 
 def build_index():
     """
-    Lee todos los vectores .npy, los combina y construye un índice FAISS.
-    También crea un archivo de metadatos para saber a qué texto corresponde cada vector.
+    Lee todos los vectores .npy y sus metadatos temporales, los combina, 
+    construye un índice FAISS y crea un archivo de metadatos global.
     """
     print("Construyendo el índice FAISS desde los archivos de vectores...")
     
     vector_files = [f for f in os.listdir(VECTORS_DIR) if f.endswith(".npy")]
     all_embeddings = []
-    metadata = [] # Lista para guardar la información de origen de cada vector
+    metadata = {} # Usaremos un diccionario para un acceso más rápido
     
     vector_id_counter = 0
-    for vector_file in tqdm(vector_files, desc="Cargando vectores"):
-        vector_path = os.path.join(VECTORS_DIR, vector_file)
-        embeddings = np.load(vector_path)
-        
-        # Guardar metadatos: a qué archivo y chunk pertenece cada vector
+    for vector_file in tqdm(vector_files, desc="Cargando y procesando vectores"):
         base_filename = os.path.splitext(vector_file)[0]
+        vector_path = os.path.join(VECTORS_DIR, vector_file)
+        meta_path = os.path.join(VECTORS_DIR, base_filename + "_meta.json")
+
+        if not os.path.exists(meta_path):
+            print(f"\n[ADVERTENCIA] No se encontró el archivo de metadatos {meta_path} para {vector_file}. Omitiendo.")
+            continue
+
+        embeddings = np.load(vector_path)
+        with open(meta_path, "r", encoding="utf-8") as f:
+            chunk_metadata = json.load(f)
+
+        if embeddings.shape[0] != len(chunk_metadata):
+            print(f"\n[ADVERTENCIA] Discrepancia en {vector_file}: {embeddings.shape[0]} vectores vs {len(chunk_metadata)} metadatos. Omitiendo.")
+            continue
+            
+        # Guardar metadatos enriquecidos
         for i in range(embeddings.shape[0]):
-            metadata.append({
-                "id": vector_id_counter,
+            meta_item = chunk_metadata[i]
+            metadata[str(vector_id_counter)] = {
                 "source_file": base_filename + ".txt",
-                "chunk_index": i
-            })
+                "chunk_index": meta_item.get("chunk_index", -1),
+                "section": meta_item.get("section", "unknown")
+            }
             vector_id_counter += 1
             
         all_embeddings.append(embeddings)
+        
+        # Eliminar el archivo de metadatos temporal después de procesarlo
+        os.remove(meta_path)
+
+    if not all_embeddings:
+        print("No se encontraron vectores para procesar. Abortando.")
+        return
 
     # Concatenar todos los embeddings en una sola matriz de NumPy
     final_embeddings = np.vstack(all_embeddings)
     
-    # La dimensión de nuestros vectores (el modelo all-MiniLM-L6-v2 produce vectores de 384 dimensiones)
+    # La dimensión de nuestros vectores (multilingual-e5-large produce 1024)
     d = final_embeddings.shape[1]
     
     # Construir el índice FAISS
-    index = faiss.IndexFlatL2(d)  # Usamos la distancia L2 (euclidiana)
-    index = faiss.IndexIDMap(index) # Permite mapear vectores a sus IDs originales
+    index = faiss.IndexFlatL2(d)
+    index = faiss.IndexIDMap(index)
     
     # Añadir los vectores al índice con sus IDs
-    index.add_with_ids(final_embeddings, np.array(range(vector_id_counter)))
+    ids = np.array([int(k) for k in metadata.keys()])
+    index.add_with_ids(final_embeddings, ids)
     
     # Guardar el índice en el disco
     faiss.write_index(index, INDEX_FILE)
     
     # Guardar los metadatos
     with open(METADATA_FILE, "w") as f:
-        json.dump(metadata, f)
+        json.dump(metadata, f, indent=4)
         
     print(f"Índice construido y guardado en {INDEX_FILE}")
     print(f"Metadatos guardados en {METADATA_FILE}")
+    print("Archivos de metadatos temporales eliminados.")
 
 def search(query, k=5):
     """
@@ -80,31 +102,42 @@ def search(query, k=5):
     with open(METADATA_FILE, "r") as f:
         metadata = json.load(f)
 
-    # Vectorizar la pregunta del usuario
-    query_vector = model.encode([query])
+    # Vectorizar la pregunta del usuario con el prefijo correcto
+    query_vector = model.encode([f"query: {query}"])
     
     # Realizar la búsqueda en el índice
-    # D son las distancias, I son los IDs de los vectores encontrados
     distances, indices = index.search(query_vector, k)
     
     print("Resultados encontrados:")
     results = []
     for i, idx in enumerate(indices[0]):
-        # Usar el ID del vector para encontrar sus metadatos
-        meta = metadata[idx]
+        if idx == -1: continue # Omitir resultados inválidos
+        
+        # Usar el ID del vector para encontrar sus metadatos en el diccionario
+        meta = metadata.get(str(idx))
+        if not meta:
+            print(f"  No se encontraron metadatos para el ID {idx}")
+            continue
+
         source_file = meta['source_file']
+        section = meta['section']
         
         # Opcional: Cargar y mostrar el chunk de texto original
         try:
             with open(os.path.join(TXT_DIR, source_file), "r", encoding="utf-8") as f:
-                # Esta es una forma simple de recuperar el chunk, se puede optimizar
                 content = f.read()
                 # Re-creamos los chunks para encontrar el que corresponde
-                from_chunking_script = " ".join(content.split()[meta['chunk_index'] * (512-50) : meta['chunk_index'] * (512-50) + 512])
+                # NOTA: Esta lógica debe coincidir con la del script 03
+                words = content.split()
+                chunk_size = 512
+                overlap = 50
+                start_index = meta['chunk_index'] * (chunk_size - overlap)
+                end_index = start_index + chunk_size
+                original_chunk = " ".join(words[start_index:end_index])
 
-                print(f"  {i+1}. Distancia: {distances[0][i]:.4f} (Fuente: {source_file}, Chunk: {meta['chunk_index']})")
-                print(f"     Texto: '{from_chunking_script[:200]}...'")
-                results.append(from_chunking_script)
+                print(f"  {i+1}. Distancia: {distances[0][i]:.4f} (Fuente: {source_file}, Chunk: {meta['chunk_index']}, Sección: {section})")
+                print(f"     Texto: '{original_chunk[:200]}...'")
+                results.append(original_chunk)
         except Exception as e:
             print(f"Error al recuperar el texto del chunk: {e}")
             
@@ -113,9 +146,8 @@ def search(query, k=5):
 # --- Ejecución ---
 if __name__ == "__main__":
     # Paso 1: Construir el índice. Solo necesitas ejecutar esto una vez.
-    # Si el índice ya existe, puedes comentar esta línea.
-    if not os.path.exists(INDEX_FILE):
-        build_index()
+    # Si el índice ya existe, puedes comentar esta línea para solo hacer búsquedas.
+    build_index()
     
     # Paso 2: Hacer preguntas al sistema.
     # Puedes ejecutar esta parte cuantas veces quieras.
