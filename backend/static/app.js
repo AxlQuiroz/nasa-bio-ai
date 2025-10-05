@@ -45,13 +45,18 @@ if (!form || !queryInput || !answerDiv || !sourcesDiv || !graphContainer || !thi
                 selectedSections.push(checkbox.value);
             });
 
-            // 2. Construir el cuerpo de la petición
+            // 2. Obtener el valor seleccionado del nuevo menú desplegable
+            const analysisSelector = document.getElementById('analysis-type-selector');
+            const selectedAnalysisType = analysisSelector.value;
+
+            // 3. Construir el cuerpo de la petición incluyendo el tipo de análisis
             const requestBody = {
                 question: query,
-                sections: selectedSections
+                sections: selectedSections,
+                analysis_type: selectedAnalysisType // ¡Este es el nuevo campo!
             };
 
-            // 3. Enviar la petición a la API correcta
+            // 4. Enviar la petición a la API correcta
             const response = await fetch('/api/ask', {
                 method: 'POST',
                 headers: {

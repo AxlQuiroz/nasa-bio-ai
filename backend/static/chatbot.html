@@ -44,6 +44,19 @@
         <div id="sources"></div>
         
         <div id="knowledge-graph"></div>
+
+        <div class="input-area">
+            <!-- Menú desplegable para el tipo de análisis -->
+            <select id="analysis-type-selector" class="analysis-selector">
+                <option value="default">Respuesta General</option>
+                <option value="progress_areas">Identificar Áreas de Progreso</option>
+                <option value="knowledge_gaps">Encontrar Lagunas de Conocimiento</option>
+                <option value="consensus_disagreement">Buscar Consenso y Desacuerdo</option>
+            </select>
+
+            <input type="text" id="user-input" placeholder="Escribe tu pregunta aquí...">
+            <button id="send-button">Enviar</button>
+        </div>
     </div>
 
     <!-- El script se carga aquí, al final del body -->

@@ -64,51 +64,48 @@ def get_text_chunk(source_file, chunk_index):
     except Exception:
         return ""
 
-def retrieve_context(query, k_retriever=20, k_reranker=5, sections=None):
-    """Recupera el contexto relevante para una consulta dada."""
-    # 1. Búsqueda inicial
-    query_vector = retriever_model.encode([f"query: {query}"])
-    _, indices = index.search(query_vector, k_retriever)
+def retrieve_context(query, top_k=20, rerank_top_n=5):
+    """
+    Recupera el contexto relevante de la base de datos de vectores sin filtrar por sección.
+    """
+    print(f"Recuperando contexto para la consulta: {query}")
     
-    initial_chunks_with_meta = [
-        (
-            get_text_chunk(metadata[str(vector_id)]['source_file'], metadata[str(vector_id)]['chunk_index']),
-            metadata[str(vector_id)]
-        )
-        for vector_id in indices[0] if str(vector_id) in metadata
-    ]
+    # 1. Búsqueda inicial en FAISS
+    query_embedding = retriever_model.encode([query])
+    distances, indices = index.search(query_embedding, top_k)
     
-    # 2. Filtrado por sección (si se especifica)
-    if sections and isinstance(sections, list) and len(sections) > 0:
-        initial_chunks_with_meta = [
-            (chunk, meta) for chunk, meta in initial_chunks_with_meta 
-            if meta.get('section', 'unknown').lower() in [s.lower() for s in sections]
-        ]
+    retrieved_docs = []
+    for i, doc_id in enumerate(indices[0]):
+        if doc_id != -1:
+            original_id = id_map.at(doc_id)
+            metadata = metadata_dict.get(str(original_id))
+            if metadata:
+                retrieved_docs.append({
+                    "id": original_id,
+                    "text": metadata['text'],
+                    "score": distances[0][i]
+                })
 
-    meaningful_chunks_with_meta = [(chunk, meta) for chunk, meta in initial_chunks_with_meta if len(chunk) > 150]
-
-    if not meaningful_chunks_with_meta:
+    if not retrieved_docs:
         return "", []
 
-    # 3. Re-clasificación de los chunks
-    rerank_pairs = [[query, chunk] for chunk, meta in meaningful_chunks_with_meta]
-    scores = cross_encoder_model.predict(rerank_pairs)
-    scored_chunks_with_meta = sorted(zip(scores, meaningful_chunks_with_meta), key=lambda x: x[0], reverse=True)
+    # 2. Re-ranking con Cross-Encoder
+    cross_inp = [[query, doc['text']] for doc in retrieved_docs]
+    cross_scores = cross_encoder_model.predict(cross_inp)
+    
+    for i in range(len(cross_scores)):
+        retrieved_docs[i]['cross_score'] = cross_scores[i]
 
-    # 4. Selección final y construcción del contexto
-    final_context_chunks = []
-    final_sources = set() # Usamos un set para evitar fuentes duplicadas
-    CONTEXT_TOKEN_LIMIT = 7500 # Llama3 tiene un contexto más grande
-
-    for score, (chunk, meta) in scored_chunks_with_meta[:k_reranker]:
-        # La tokenización ahora es manejada por la API, solo contamos palabras como aproximación
-        if len("\n\n---\n\n".join(final_context_chunks).split()) < CONTEXT_TOKEN_LIMIT:
-            final_context_chunks.append(chunk)
-            final_sources.add(meta['source_file'])
-        else:
-            break
-            
-    return "\n\n---\n\n".join(final_context_chunks), list(final_sources)
+    reranked_docs = sorted(retrieved_docs, key=lambda x: x['cross_score'], reverse=True)
+    
+    # 3. Construir el contexto final
+    final_context = "\n\n---\n\n".join([doc['text'] for doc in reranked_docs[:rerank_top_n]])
+    context_metadata = [
+        {"id": doc['id'], "text": doc['text']} for doc in reranked_docs[:rerank_top_n]
+    ]
+    
+    print(f"Contexto final construido con {len(context_metadata)} fragmentos.")
+    return final_context, context_metadata
 
 def parse_llm_output(full_response):
     """Separa el texto de la respuesta y el JSON del grafo."""
@@ -131,29 +128,37 @@ def parse_llm_output(full_response):
             
     return text_part, graph_data
 
-def generate_answer_stream(query, context):
-    """Genera la respuesta en modo stream usando la API de Groq."""
-    if not llm_client:
-        yield "token", "[ERROR: El cliente del LLM no está configurado. Revisa la API key de Groq.]"
-        return
+def generate_answer_stream(query, context, context_metadata, analysis_type='default'):
+    """
+    Genera una respuesta usando el LLM con un prompt dinámico según el tipo de análisis.
+    """
+    
+    # Plantillas de prompts para cada tipo de análisis
+    PROMPT_TEMPLATES = {
+        "default": (
+            "Eres un asistente de IA experto en biociencia. Tu tarea es responder la pregunta del usuario de forma clara y concisa, basándote únicamente en el contexto proporcionado. "
+            "Pregunta del usuario: {query}"
+        ),
+        "progress_areas": (
+            "Eres un analista de investigación experto en biociencia. Tu tarea es analizar el contexto proporcionado para identificar y resumir las 'áreas de progreso' y los 'avances más significativos' relacionados con la pregunta del usuario. "
+            "No respondas directamente a la pregunta, en su lugar, extrae y presenta los avances clave. "
+            "Pregunta del usuario: {query}"
+        ),
+        "knowledge_gaps": (
+            "Eres un estratega de investigación experto en biociencia. Tu tarea es analizar el contexto proporcionado para identificar y explicar las 'lagunas de conocimiento', las 'preguntas sin resolver' y las 'áreas que requieren más investigación' relacionadas con la pregunta del usuario. "
+            "Cita frases que sugieran incertidumbre o necesidad de futuros estudios. "
+            "Pregunta del usuario: {query}"
+        ),
+        "consensus_disagreement": (
+            "Eres un revisor científico experto. Tu tarea es analizar el contexto, que puede provenir de múltiples fuentes, para encontrar 'áreas de consenso' (donde los autores coinciden) y 'áreas de desacuerdo' (donde hay controversia o hallazgos contradictorios) sobre la pregunta del usuario. "
+            "Estructura tu respuesta separando claramente el consenso del desacuerdo. "
+            "Pregunta del usuario: {query}"
+        )
+    }
 
-    # --- INICIO DE LA CORRECCIÓN ---
-    # Si el contexto está vacío, no llamar a la API.
-    if not context or not context.strip():
-        yield "token", "No se encontró información relevante en los documentos para responder a esta pregunta."
-        return
-    # --- FIN DE LA CORRECIÓN ---
-
-    system_prompt = """Usted es un asistente experto en biología y astronáutica. Responda la pregunta del usuario basándose únicamente en el contexto proporcionado.
-Después de su respuesta, genere un objeto JSON con relaciones clave.
-EJEMPLO:
-Respuesta de texto aquí.
-{
-  "graph_data": [
-    {"source": "Concepto A", "target": "Concepto B", "relationship": "afecta a"}
-  ]
-}
-Si la información no está en el contexto, diga "La información no se encuentra en mis documentos." y no genere JSON."""
+    # Seleccionar la plantilla de prompt o usar la por defecto
+    system_prompt_template = PROMPT_TEMPLATES.get(analysis_type, PROMPT_TEMPLATES['default'])
+    system_prompt = system_prompt_template.format(query=query)
 
     user_prompt = f"CONTEXTO:\n{context}\n\nPREGUNTA:\n{query}"
 
@@ -203,31 +208,28 @@ Si la información no está en el contexto, diga "La información no se encuentr
 
 @app.route('/api/ask', methods=['POST'])
 def ask():
-    """Recibe una pregunta, la procesa con la IA y devuelve la respuesta en stream."""
-    data = request.get_json()
-    query = data.get('question')
-    sections = data.get('sections')
+    query = request.json.get('query')
+    # Obtenemos el nuevo tipo de análisis. 'default' si no se especifica.
+    analysis_type = request.json.get('analysis_type', 'default')
 
     if not query:
-        return jsonify({'error': 'No question provided'}), 400
+        return jsonify({"error": "Query is required"}), 400
 
-    print(f"Recibida pregunta: {query} | Secciones: {sections}")
+    try:
+        # Ya no pasamos 'sections' a retrieve_context
+        context, context_metadata = retrieve_context(query)
+        
+        if not context:
+            # Si no hay contexto, generamos una respuesta sin él
+            return Response(generate_answer_stream(query, "No se encontró contexto relevante.", [], analysis_type), mimetype='application/json')
 
-    def stream_response():
-        context, sources = retrieve_context(query, sections=sections)
-       
-        if not context.strip():
-            yield f"data: {json.dumps({'token': 'La información no se encuentra en mis documentos.'})}\n\n"
-            yield f"data: {json.dumps({'token': '[DONE]'})}\n\n"
-            return
+        # Pasamos el 'analysis_type' a la función de generación
+        return Response(generate_answer_stream(query, context, context_metadata, analysis_type), mimetype='application/json')
 
-        for event_type, event_data in generate_answer_stream(query, context):
-            yield f"data: {json.dumps({event_type: event_data})}\n\n"
-      
-        yield f"data: {json.dumps({'sources': sources})}\n\n"
-        yield f"data: {json.dumps({'token': '[DONE]'})}\n\n"
-
-    return Response(stream_response(), mimetype='text/event-stream')
+    except Exception as e:
+        print(f"Error en /api/ask: {e}")
+        traceback.print_exc()
+        return jsonify({"error": "An internal error occurred"}), 500
 
 # --- RUTAS PARA SERVIR EL FRONTEND ---
 
