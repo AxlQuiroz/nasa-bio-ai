@@ -7,7 +7,7 @@ from flask import Flask, request, jsonify, render_template, Response
 import time 
 
 # --- 1. INICIALIZACIÓN DE LA APLICACIÓN FLASK ---
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', static_url_path='')
 
 # --- 2. CARGA DE MODELOS (SE HACE UNA SOLA VEZ AL INICIAR EL SERVIDOR) ---
 print("Cargando componentes de la IA... Esto puede tardar varios minutos.")
@@ -94,27 +94,23 @@ def retrieve_context(query, k_retriever=20, k_reranker=4):
 def generate_answer_stream(query, context):
     """Genera la respuesta en modo stream, produciendo cada token."""
     prompt = f"""<|system|>
-Usted es un asistente experto en biología y astronáutica. Su tarea es doble:
-1. Primero, responda la pregunta del usuario de forma concisa basándose ÚNICAMENTE en el contexto proporcionado.
-2. Después de la respuesta, en una nueva línea, genere un objeto JSON que represente un grafo de conocimiento de los conceptos clave. El JSON debe tener una clave "graph_data" que contenga una lista de objetos, donde cada objeto tiene "source", "target" y "relationship".
-
-Si la información no está en el contexto, responda únicamente "La información no se encuentra en mis documentos." y no genere el JSON. No invente nada.
-Su respuesta DEBE seguir este formato:
-Respuesta en texto...
+Usted es un asistente experto en biología y astronáutica. Responda la pregunta del usuario basándose únicamente en el contexto.
+Después de su respuesta, genere un objeto JSON con relaciones clave.
+EJEMPLO:
+Respuesta de texto aquí.
 {{
   "graph_data": [
-    {{"source": "concepto1", "target": "concepto2", "relationship": "es parte de"}},
-    {{"source": "concepto3", "target": "concepto4", "relationship": "causa"}}
+    {{"source": "Concepto A", "target": "Concepto B", "relationship": "afecta a"}}
   ]
 }}
-</s>
+Si la información no está en el contexto, diga "La información no se encuentra en mis documentos." y no genere JSON.</s>
 <|user|>
 CONTEXTO:
 {context}
 
 PREGUNTA:
 {query}</s>
-<|assistant|>
+<assistant|>
 """
    
     stream = llm(prompt, max_tokens=512, stop=["</s>", "<|user|>"], echo=False, temperature=0.1, stream=True)
@@ -129,8 +125,8 @@ PREGUNTA:
 
 @app.route('/')
 def home():
-    """Sirve la página principal HTML."""
-    return render_template('index.html')
+    """Sirve la página principal HTML desde la carpeta static."""
+    return app.send_static_file('index.html')
 
 @app.route('/ask', methods=['POST'])
 def ask():
