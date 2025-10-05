@@ -51,13 +51,13 @@ if (!form || !queryInput || !answerDiv || !sourcesDiv || !graphContainer || !thi
 
             // 3. Construir el cuerpo de la petición incluyendo el tipo de análisis
             const requestBody = {
-                question: query,
+                query: query,
                 sections: selectedSections,
                 analysis_type: selectedAnalysisType // ¡Este es el nuevo campo!
             };
 
-            // 4. Enviar la petición a la API correcta
-            const response = await fetch('/api/ask', {
+            // 4. Enviar la petición a la API correcta con la URL completa
+            const response = await fetch('http://127.0.0.1:5000/api/ask', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -74,30 +74,35 @@ if (!form || !queryInput || !answerDiv || !sourcesDiv || !graphContainer || !thi
                 const { value, done } = await reader.read();
                 if (done) break;
 
-                const chunk = decoder.decode(value);
+                const chunk = decoder.decode(value, {stream: true});
                 const lines = chunk.split('\n').filter(line => line.trim() !== '');
 
                 for (const line of lines) {
-                    if (line.startsWith('data:')) {
-                        const dataStr = line.substring(5).trim();
-                        try {
-                            const data = JSON.parse(dataStr);
+                    try {
+                        // --- INICIO DE LA CORRECCIÓN ---
+                        // Parsea cada línea directamente como un objeto JSON
+                        const data = JSON.parse(line);
+                        // --- FIN DE LA CORRECCIÓN ---
 
-                            if (data.token === '[DONE]') {
-                                thinkingSpan.style.display = 'none';
-                                processFinalResponse(fullResponse, answerDiv);
-                                displaySources(sources, sourcesDiv);
-                                queryInput.value = '';
-                                return;
-                            }
-                            if (data.sources) {
-                                sources = data.sources;
-                            } else if (data.token) {
-                                fullResponse += data.token;
-                            }
-                        } catch (e) {
-                            console.error('Error parsing JSON from stream:', dataStr, e);
+                        if (data.token === '[DONE]') {
+                            thinkingSpan.style.display = 'none';
+                            processFinalResponse(fullResponse, answerDiv);
+                            displaySources(sources, sourcesDiv);
+                            queryInput.value = '';
+                            return;
                         }
+                        if (data.sources) {
+                            sources = data.sources;
+                        } else if (data.graph) {
+                            // Aquí puedes manejar la visualización del grafo
+                            console.log("Datos del grafo recibidos:", data.graph);
+                        } else if (data.token) {
+                            fullResponse += data.token;
+                            // Actualiza la respuesta en tiempo real si lo deseas
+                            answerDiv.innerHTML = marked.parse(fullResponse);
+                        }
+                    } catch (e) {
+                        console.error('Error parsing JSON from stream:', line, e);
                     }
                 }
             }
