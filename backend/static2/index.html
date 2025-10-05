@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NASA WEB SITE</title>
+    <link rel="stylesheet" href="styles.css"> 
+    <script src="script.js" defer></script>
+</head>
+<body>
+
+<header>
+    <h1>NASA</h1>
+    <img alt="NASA Space Apps Challenge Logo" loading="lazy" width="90" height="80" decoding="async" data-nimg="1" style="color:transparent" src="https://www.nasa.gov/wp-content/themes/nasa/assets/images/nasa-logo@2x.png">
+</header>
+
+ <div class="container">
+        <form id="query-form">
+            <input type="text" id="query" placeholder="Search an article..." autocomplete="off">
+            <button type="submit" id="submit-button">Search</button>
+        </form>
+
+        <div id="thinking" style="display: none;">Pensando...</div>
+
+        <div id="answer"></div>
+        <div id="sources"></div>
+        
+        <div id="knowledge-graph"></div>
+    </div>
+
+<footer>
+    <p>&copy; 2023 NASA. All rights reserved.</p>
+</footer>
+
+
+</body>
+</html>
