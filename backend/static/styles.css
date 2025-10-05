@@ -29,11 +29,12 @@ header {
     margin-bottom: 20px;
     width: 100%;
     position: relative;
+    border-radius: 5px;
     
     }
 
 #query-form {
-    background-color: #1E2C8C;
+    background-color: #26369c;
     color: #D6F03C;
     border: none;
     padding: 10px 20px;
@@ -42,16 +43,54 @@ header {
     cursor: pointer;
     font-size: 1em;
 }
-#query-input {
-    background-color: #3749c0;
-    color: #D6F03C;
+#query {
+    background-color: #3A4DA0;
+    color: #ffffff;
     border: none;
+    padding: 10px;
     border-radius: 5px;
     font-size: 1em;
-    padding: 10px;
+    width: 300px;
 }
+#submit-button {
+    background-color: #D6F03C;
+    color: #1E2C8C;
+    border: none;
+    padding: 10px 20px;
+    margin-left: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+}
+#submit-button:hover {
+    background-color: #C5E32B;
+    color: #173A6E;
+    box-shadow: #0066FF 0px 4px 8px;
+    transform: translateY(-2px);
 
-
+    
+}
+#submit-button:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+#thinking {
+    margin-top: 20px;
+    font-size: 1.2em;
+    color: #ffffff;
+}
+#answer {
+    margin-top: 20px;
+    font-size: 1.2em;
+    color: #ffffff;
+    max-width: 800px;
+    text-align: left;
+    background-color: #3e55ba;
+    padding: 105px;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    
+}
 
 .app-container {
     display: flex;
