@@ -37,11 +37,30 @@ if (!form || !queryInput || !answerDiv || !sourcesDiv || !graphContainer || !thi
         let sources = [];
 
         try {
-            const response = await fetch('/ask', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ question: query })
+            // --- INICIO DE LA CORRECCIÓN ---
+
+            // 1. Recoger las secciones seleccionadas (si existen)
+            const selectedSections = [];
+            document.querySelectorAll('input[name="section"]:checked').forEach((checkbox) => {
+                selectedSections.push(checkbox.value);
             });
+
+            // 2. Construir el cuerpo de la petición
+            const requestBody = {
+                question: query,
+                sections: selectedSections
+            };
+
+            // 3. Enviar la petición a la API correcta
+            const response = await fetch('/api/ask', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestBody) // Ahora requestBody sí existe
+            });
+
+            // --- FIN DE LA CORRECIÓN ---
 
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
